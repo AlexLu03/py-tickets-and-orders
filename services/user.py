@@ -15,8 +15,8 @@ def create_user(
         username=username,
         password=password,
         email=email,
-        first_name=first_name,
-        last_name=last_name
+        first_name=first_name or "",
+        last_name=last_name or ""
     )
 
 
