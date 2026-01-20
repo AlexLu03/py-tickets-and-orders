@@ -109,12 +109,14 @@ class Ticket(models.Model):
 
         if not (1 <= self.row <= hall.rows):
             errors["row"] = [
-                f"row must be in range: (1, {hall.rows})"
+                f"row number must be in available range: "
+                f"(1, rows): (1, {hall.rows})"
             ]
 
         if not (1 <= self.seat <= hall.seats_in_row):
             errors["seat"] = [
-                f"seat must be in range: (1, {hall.seats_in_row})"
+                f"seat number must be in available range: "
+                f"(1, seats_in_row): (1, {hall.seats_in_row})"
             ]
 
         if errors:
