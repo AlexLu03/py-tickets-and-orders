@@ -25,7 +25,7 @@ class Movie(models.Model):
     genres = models.ManyToManyField(to=Genre, related_name="movies")
 
     class Meta:
-        indexes =[
+        indexes = [
             models.Index(fields=["title"])
         ]
 
@@ -49,10 +49,14 @@ class CinemaHall(models.Model):
 class MovieSession(models.Model):
     show_time = models.DateTimeField()
     cinema_hall = models.ForeignKey(
-        to=CinemaHall, on_delete=models.CASCADE, related_name="movie_sessions"
+        to=CinemaHall,
+        on_delete=models.CASCADE,
+        related_name="movie_sessions"
     )
     movie = models.ForeignKey(
-        to=Movie, on_delete=models.CASCADE, related_name="movie_sessions"
+        to=Movie,
+        on_delete=models.CASCADE,
+        related_name="movie_sessions"
     )
 
     def __str__(self) -> str:
@@ -63,7 +67,6 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(to=Actor, on_delete=models.CASCADE)
 
-
     class Meta:
         ordering = ["created_at"]
 
@@ -72,11 +75,16 @@ class Order(models.Model):
 
 
 class Ticket(models.Model):
-    movie_session = models.ForeignKey(to=MovieSession, on_delete=models.CASCADE)
-    order = models.ForeignKey(to=Order, on_delete=models.CASCADE)
+    movie_session = models.ForeignKey(
+        to=MovieSession,
+        on_delete=models.CASCADE
+    )
+    order = models.ForeignKey(
+        to=Order,
+        on_delete=models.CASCADE
+    )
     row = models.IntegerField()
     seat = models.IntegerField()
-
 
     class Meta:
         constraints = [
@@ -91,10 +99,14 @@ class Ticket(models.Model):
         hall = self.movie_session.cinema_hall
 
         if not (1 <= self.row <= hall.rows):
-            errors["row"] = [f"row must be in range: (1, {hall.rows})"]
+            errors["row"] = [
+                f"row must be in range: (1, {hall.rows})"
+            ]
 
         if not (1 <= self.seat <= hall.seats_in_row):
-            errors["seat"] = [f"seat must be in range: (1, {hall.seats_in_row})"]
+            errors["seat"] = [
+                f"seat must be in range: (1, {hall.seats_in_row})"
+            ]
 
         if errors:
             raise ValidationError(errors)
@@ -104,7 +116,10 @@ class Ticket(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Ticket: Speed {self.movie_session.show_time} ({self.row}, {self.seat})"
+        return (
+            f"Ticket: Speed {self.movie_session.show_time} "
+            f"({self.row}, {self.seat})"
+        )
 
 
 class User(AbstractUser):
