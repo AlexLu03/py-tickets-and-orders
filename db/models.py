@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
 
 
 class Genre(models.Model):
@@ -21,6 +23,11 @@ class Movie(models.Model):
     description = models.TextField()
     actors = models.ManyToManyField(to=Actor, related_name="movies")
     genres = models.ManyToManyField(to=Genre, related_name="movies")
+
+    class Meta:
+        indexes =[
+            models.Index(fields=["title"])
+        ]
 
     def __str__(self) -> str:
         return self.title
@@ -50,3 +57,55 @@ class MovieSession(models.Model):
 
     def __str__(self) -> str:
         return f"{self.movie.title} {str(self.show_time)}"
+
+
+class Order(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(to=Actor, on_delete=models.CASCADE)
+
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        return f"Order: {self.created_at}"
+
+
+class Ticket(models.Model):
+    movie_session = models.ForeignKey(to=MovieSession, on_delete=models.CASCADE)
+    order = models.ForeignKey(to=Order, on_delete=models.CASCADE)
+    row = models.IntegerField()
+    seat = models.IntegerField()
+
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["row", "seat", "movie_session"],
+                name="unique_ticket",
+            )
+        ]
+
+    def clean(self) -> None:
+        errors = {}
+        hall = self.movie_session.cinema_hall
+
+        if not (1 <= self.row <= hall.rows):
+            errors["row"] = [f"row must be in range: (1, {hall.rows})"]
+
+        if not (1 <= self.seat <= hall.seats_in_row):
+            errors["seat"] = [f"seat must be in range: (1, {hall.seats_in_row})"]
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"Ticket: Speed {self.movie_session.show_time} ({self.row}, {self.seat})"
+
+
+class User(AbstractUser):
+    pass
